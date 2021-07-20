@@ -5,19 +5,19 @@ import random
 from numpy.core.fromnumeric import sort
 from operator import itemgetter
 import math
+import copy
 
 def pop_matrix_column(matrix, column_num):
     # print(matrix)
     for i in range(len(matrix)):
         # print("HERE", matrix[i], '/n')
-        if(matrix[i][column_num] != None):  
-           matrix[i].pop(column_num)
-        else:
-            print("No go /n")
-        #     matrix[i].pop(column_num)
-        # else:
-        #     print("HERE", matrix[i])
-    
+        try:
+            if(len(matrix[i]) >= column_num+1):  
+                matrix[i].pop(column_num)
+        except:
+            print("failed at: ", i , len(matrix))
+            print(matrix[i])
+
 def customRand(start,end,place):
     return round(random.uniform(start, end),place)
 
@@ -99,35 +99,40 @@ def russianRoulette(list,population):
                 surviors.append(sortedByfitness[i])
                 break
     pop_matrix_column(surviors, 4-1)
-    print(surviors)
+    # print(surviors)
     return surviors
 
 def crossOver(list,population,pc):
     #cross over chromosomes 
     #exclude the 2 fittest solutions
     index_swap = []
+    cloneList  = copy.deepcopy(list)
     for i in range(2,population):
         check = customRand(0,1,2)
         if check <= pc: #this chromosome needs to be crossed over 
             index_swap.append(i)
+    # print("index_swap: ", index_swap, "/n")
     if(len(index_swap) <= 1):
         return list
     for j in range(len(index_swap)):
-        
         if j == len(index_swap)-1: # last element must cross over with the first 
             index_A = index_swap[j]
             index_B = index_swap[-1]
         else:
             index_A = index_swap[j]
             index_B = index_swap[j+1]
-        print("INDEX: " , list[index_A], list[index_B])
+        
         crossOverPoint = int(customRand(1,2,0))
+        # print("INDEX: " , list[index_A], list[index_B], "CROSSPOINT: ", crossOverPoint)
         if(crossOverPoint == 1):
-            list[index_A] = [list[index_A][0],list[index_B][1], list[index_B][2]]
+            cloneList[index_A] = [cloneList[index_A][0],cloneList[index_B][1], cloneList[index_B][2]]
         else:
-            list[index_A] = [list[index_A][0],list[index_A][1], list[index_B][2]]
-        print("change : " , list[index_A])
-    return list
+            list[index_A] = [cloneList[index_A][0],cloneList[index_A][1], cloneList[index_B][2]]
+        # print("change : " , cloneList[index_A])
+    # for val in index_swap:
+    #     print("original: ", list[val], "/n")
+    #     print("new: ", cloneList[val], "/n")
+    return cloneList
 
 
 
@@ -138,7 +143,9 @@ def main():
         # print("survior,fit : ", survior, fit )
         survior.append(fit)
 
-    russianRoulette(surviors,50)
+    surviors = russianRoulette(surviors,50)
+    surviors = crossOver(surviors,population=50,pc=0.6)
+    
 
     
 def test():

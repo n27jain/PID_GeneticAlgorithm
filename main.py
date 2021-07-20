@@ -34,7 +34,6 @@ def getFitness(chromo):
         i_s_e += (number-1) * (number-1)
     total_cost = i_s_e +t_r+t_s+m_p
     if math.isnan(total_cost):
-        print("HERE")
         return -1
     return 1/(1+total_cost)
 
@@ -56,7 +55,6 @@ def russianRoulette(list,population):
     # for the remaing 48 we select from the 50 in the population 
     # using the roulette strategy
     sortedByfitness = sorted(list, key=itemgetter(3))
-    print("sortedByfitness",sortedByfitness)
     surviors = []
 
     # add the 2 most fit chromosomes 
@@ -84,11 +82,12 @@ def russianRoulette(list,population):
         # we should also not keep 1 as a possibly randomly generated number. 
         # from experimentation the sum of the ratios is arround 0.9999999999999996
         check = customRand(0,0.99999,5) 
-        
-
         for i in range(len(sortedByfitness)):
             if rouletteRatio[i] >= check:
-                surviors.append()
+                surviors.append(sortedByfitness[i])
+                break
+    print(len(surviors))
+        
 
 
         

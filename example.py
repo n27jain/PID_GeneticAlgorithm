@@ -1,7 +1,10 @@
-from operator import itemgetter
-
+from control.matlab import *
+import scipy.integrate as integrate
+import numpy as np
+import random
 from numpy.core.fromnumeric import sort
+from operator import itemgetter
+import math
 
-matrix = [ [4,5,6,99], [1,2,3,0], [7,0,9,1]]
 
-print(sorted(matrix, key=itemgetter(3)))
+print(int(round(random.uniform(1, 2),0)))

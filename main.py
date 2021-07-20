@@ -6,6 +6,18 @@ from numpy.core.fromnumeric import sort
 from operator import itemgetter
 import math
 
+def pop_matrix_column(matrix, column_num):
+    # print(matrix)
+    for i in range(len(matrix)):
+        # print("HERE", matrix[i], '/n')
+        if(matrix[i][column_num] != None):  
+           matrix[i].pop(column_num)
+        else:
+            print("No go /n")
+        #     matrix[i].pop(column_num)
+        # else:
+        #     print("HERE", matrix[i])
+    
 def customRand(start,end,place):
     return round(random.uniform(start, end),place)
 
@@ -76,7 +88,7 @@ def russianRoulette(list,population):
         
     # print("verify : ", verify)
     # print("rouletteRatio : ",rouletteRatio)
-    for i in range(48):
+    for i in range(population - 2):
         # lets keep it significant by 5 decimal places since there are many possible ties at 
         # 4 decimal places
         # we should also not keep 1 as a possibly randomly generated number. 
@@ -86,12 +98,37 @@ def russianRoulette(list,population):
             if rouletteRatio[i] >= check:
                 surviors.append(sortedByfitness[i])
                 break
-    print(len(surviors))
-        
+    pop_matrix_column(surviors, 4-1)
+    print(surviors)
+    return surviors
 
-
+def crossOver(list,population,pc):
+    #cross over chromosomes 
+    #exclude the 2 fittest solutions
+    index_swap = []
+    for i in range(2,population):
+        check = customRand(0,1,2)
+        if check <= pc: #this chromosome needs to be crossed over 
+            index_swap.append(i)
+    if(len(index_swap) <= 1):
+        return list
+    for j in range(len(index_swap)):
         
-    
+        if j == len(index_swap)-1: # last element must cross over with the first 
+            index_A = index_swap[j]
+            index_B = index_swap[-1]
+        else:
+            index_A = index_swap[j]
+            index_B = index_swap[j+1]
+        print("INDEX: " , list[index_A], list[index_B])
+        crossOverPoint = int(customRand(1,2,0))
+        if(crossOverPoint == 1):
+            list[index_A] = [list[index_A][0],list[index_B][1], list[index_B][2]]
+        else:
+            list[index_A] = [list[index_A][0],list[index_A][1], list[index_B][2]]
+        print("change : " , list[index_A])
+    return list
+
 
 
 def main():

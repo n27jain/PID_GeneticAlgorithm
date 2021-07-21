@@ -1,7 +1,7 @@
 from control.matlab import *
 import scipy.integrate as integrate
 import numpy as np
-
+import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import sort
 from operator import itemgetter
 import math
@@ -10,6 +10,14 @@ import logistics
 
 def plotByPoints(points):
     x = []
+    for i in range(len(points)):
+        x.append(i)
+    plt.xlabel('generation')
+    # frequency label
+    plt.ylabel('best fitness')
+    plt.plot(x, points)
+    plt.show()
+
 def getFitness(chromo):
     kp = chromo[0]  # Random initial value between (2,18)
     ti = chromo[1]  # Random initial value between (1.05, 9.42)
@@ -31,7 +39,7 @@ def getFitness(chromo):
     t_s = sysinfo['SettlingTime']
     m_p = sysinfo['Overshoot']
 
-    for number, in repr[0]:
+    for number in repr[0]:
         i_s_e += (number-1) * (number-1)
     total_cost = i_s_e +t_r+t_s+m_p
     if math.isnan(total_cost):
@@ -39,9 +47,6 @@ def getFitness(chromo):
     return 1/(1+total_cost)
 
 def generateStart(population):
-    # Kp – (2,18)
-    # Ti – (1.05,9.42)
-    # Td – (0.26, 2.37)
     sol_list = []
     for i in range(population):
         kp = logistics.customRand(2,18,2)
@@ -55,9 +60,9 @@ def russianRoulette(list,population):
     # select the top 2 fitest scores as chromosomes 1 and 2
     # for the remaing 48 we select from the 50 in the population 
     # using the roulette strategy
+
     sortedByfitness = sorted(list, key=itemgetter(3))
     surviors = []
-    # logistics.printCleanMatrix(sortedByfitness)
     # add the 2 most fit chromosomes 
     surviors.append(sortedByfitness[-1])
     surviors.append(sortedByfitness[-2])
@@ -163,10 +168,17 @@ def main(population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
 
 def TEST1():
     # population = 50; generations = 150; Pc = 0.6; Pm = 0.25
-    print(main(generations=10))
+
+    plotByPoints(main(generations=10))
+
+# def see():
+#     for i in range(10):
+#         print(getFitness([2.96, 1.67, 1.26]))
 
 # runScore()
 
 # main(150)
 
 TEST1()
+
+# see()

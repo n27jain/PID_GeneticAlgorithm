@@ -1,8 +1,6 @@
 from control.matlab import *
-import scipy.integrate as integrate
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.core.fromnumeric import sort
 from operator import itemgetter
 import math
 import copy
@@ -50,7 +48,7 @@ def getFitness(chromo):
 
     if math.isnan(total_cost) or math.isnan(t_s):
         return -1
-    return 100/(1+total_cost)
+    return 1000/(1+total_cost)
 
 def generateStart(population):
     sol_list = []
@@ -62,28 +60,20 @@ def generateStart(population):
     return sol_list
 
 def russianRoulette(list,population):
-    # of the 50 chromosomes
-    # select the top 2 fitest scores as chromosomes 1 and 2
-    # for the remaing 48 we select from the 50 in the population 
-    # using the roulette strategy
-    global txt
 
-    sortedByfitness = sorted(list, key=itemgetter(3))
-    logistics.writeMatrix(sortedByfitness,txt,"SORTED FITNESS: ")
-    print("size: ", len(sortedByfitness))
-    newList = [None] * population
+    global txt
+    sortedByfitness = copy.deepcopy(sorted(list, key = itemgetter(3)))
+    newlist = []
     # add the 2 most fit chromosomes 
-    newList[0]=(sortedByfitness[population-1])
-    newList[1]=(sortedByfitness[population-2])
-    print(len(newList))
-    logistics.writeMatrix(newList,txt,"TWO BEST: ")
+    newlist.append(copy.deepcopy(sortedByfitness[population-1]))
+    newlist.append(copy.deepcopy(sortedByfitness[population-2]))
     rouletteRatio = []
     S = 0
     verify = 0
 
-    for sol in sortedByfitness: #find sum of all fitness
-        if sol[3] > 0:
-            S += sol[3]
+    for x in range (len(sortedByfitness)):
+        if sortedByfitness[x][3] > 0:
+            S += sortedByfitness[x][3]
     
     for i in range(population):
         if sortedByfitness[i][3] > 0: # solution is feasible 
@@ -91,19 +81,18 @@ def russianRoulette(list,population):
             rouletteRatio.append(verify)
         else:
             rouletteRatio.append(-1)
-    logistics.writeMatrix(newList,txt,"TWO BEST After: ")
-    for i in range(2,population):
-        # lets keep it significant by 5 decimal places since there are many possible ties at 
-        # 4 decimal places
-        # we should also not keep 1 as a possibly randomly generated number. 
-        # from experimentation the sum of the ratios is arround 0.9999999999999996
+    
+    
+    
+    for i in range(population - 2):
         check = logistics.customRand(0,0.99999,5) 
         for j in range(population):
             if rouletteRatio[j] >= check:
-                newList[i] = (sortedByfitness[j])
+                newlist.append(copy.deepcopy((sortedByfitness[j])))
                 break
-    logistics.writeMatrix(["Junk"],txt,"The Found Surviors ")
-    return newList
+        # print("newList: " , newlist)
+
+    return newlist
 
 def crossOver(list,population,pc):
     #cross over chromosomes 
@@ -126,23 +115,34 @@ def crossOver(list,population,pc):
         
         crossOverPoint = int(logistics.customRand(1,2,0))
         if(crossOverPoint == 1):
-            cloneList[index_A] = [cloneList[index_A][0],cloneList[index_B][1], cloneList[index_B][2],0]
+            cloneList[index_A] = copy.deepcopy([cloneList[index_A][0],cloneList[index_B][1], cloneList[index_B][2],0])
         else:
-            list[index_A] = [cloneList[index_A][0],cloneList[index_A][1], cloneList[index_B][2],0]
+            list[index_A] = copy.deepcopy([cloneList[index_A][0],cloneList[index_A][1], cloneList[index_B][2],0])
     return cloneList
 
 def mutation(list,population,pm):
+    global txt
     clone = copy.deepcopy(list)
+    logistics.writeMatrix(clone,txt,"Matrix Before Mutation :")
     for i in range(2,population):
+        logistics.writeMatrix(["0"],txt," Before clone"+"["+str(i)+ "] " + str(clone[i]))
         check = logistics.customRand(0,1,2)
         if check <= pm:
-            clone[i][0] = logistics.customRand(2,18,2)
+            # logistics.writeMatrix(["0"],txt,"Before clone[i][0] "+ str(clone[i]))
+            
+            clone[i][0] = copy.deepcopy(logistics.customRand(2,18,2))
+            # logistics.writeMatrix(["0"],txt,"After clone[i][0] "+ str(clone[i]))
+
         check = logistics.customRand(0,1,2)
         if check <= pm:
-            clone[i][1] = logistics.customRand(1.05,9.42,2)
+            # logistics.writeMatrix(["0"],txt,"Before clone[i][0] "+ str(clone[i]))
+            clone[i][1] = copy.deepcopy(logistics.customRand(1.05,9.42,2))
+            # logistics.writeMatrix(["0"],txt,"After clone[i][0] "+ str(clone[i]))
+
         check = logistics.customRand(0,1,2)
         if check <= pm:
-            clone[i][2] = logistics.customRand(0.26,2.37,2)
+            clone[i][2] = copy.deepcopy(logistics.customRand(0.26,2.37,2))
+        logistics.writeMatrix(clone,txt,"Matrix after Mutation : " + str(i))
     return clone
 
 
@@ -154,13 +154,17 @@ def main(population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
     for survior in surviors:
         fit = getFitness(survior)
         survior[3]= fit
-    logistics.writeMatrix( surviors,txt,"1.) Fitness :")
-    russian_surviors = russianRoulette(surviors,population)
-    logistics.writeMatrix( surviors,txt,"Roullete :")
-    plot_points.append(russian_surviors[-1][3]) #this point will come from the 
-    cross_surviors = crossOver(russian_surviors,population,Pc)
-    logistics.writeMatrix(surviors,txt, "Crossover :")
-    surviors = mutation(cross_surviors,population,pm = 0.25)
+    # logistics.writeMatrix( surviors,txt,"1.) Fitness :")
+
+    surviors = russianRoulette(surviors,population)
+    # logistics.writeMatrix(surviors,txt,"Roullete :")
+
+    plot_points.append(surviors[-1][3]) #this point will come from the 
+
+    surviors = crossOver(surviors,population,Pc)
+    # logistics.writeMatrix(surviors,txt, "Crossover :")
+
+    surviors = mutation(surviors,population,Pm)
     logistics.writeMatrix(surviors,txt,"mutation :", )
     
     # logistics.printCleanMatrix(surviors)
@@ -172,17 +176,16 @@ def main(population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
             survior[3] = fit
         logistics.writeMatrix(surviors,txt, str(i+2) + ".) Fitness :")
         if i != generations - 1:
-            russian_surviors = russianRoulette(surviors,population)
+            
+            surviors = russianRoulette(surviors,population)
             logistics.writeMatrix( surviors,txt,"Roullete :")
 
-            plot_points.append(russian_surviors[-1][3])
-            cross_surviors = crossOver(russian_surviors,population,Pc)
-
+            plot_points.append(surviors[-1][3])
+            surviors = crossOver(surviors,population,Pc)
             logistics.writeMatrix( surviors,txt,"Crossover :")
-            surviors = mutation(cross_surviors,population,Pm)
 
-            logistics.writeMatrix( surviors,txt,"mutations :")
-            logistics.writeMatrix(surviors,txt)
+            surviors = mutation(surviors, population,Pm)
+            logistics.writeMatrix(surviors, txt,"mutations :")
             # logistics.printCleanMatrix(surviors)
 
     #get the best solution of the last iterations found in position 0
@@ -195,7 +198,7 @@ def main(population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
 def TEST1():
     # population = 50; generations = 150; Pc = 0.6; Pm = 0.25
 
-    plotByPoints(main(generations=10))
+    plotByPoints(main(generations=3))
 
 # def see():
 #     for i in range(10):

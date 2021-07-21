@@ -8,6 +8,7 @@ import math
 import copy
 import logistics
 
+txt = None
 def plotByPoints(points):
     x = []
     for i in range(len(points)):
@@ -16,7 +17,7 @@ def plotByPoints(points):
     # frequency label
     plt.ylabel('best fitness')
     plt.plot(x, points)
-    plt.show()
+    plt.savefig('graph1.png')
 
 def getFitness(chromo):
     kp = chromo[0]  # Random initial value between (2,18)
@@ -39,12 +40,17 @@ def getFitness(chromo):
     t_s = sysinfo['SettlingTime']
     m_p = sysinfo['Overshoot']
 
-    for number in repr[0]:
-        i_s_e += (number-1) * (number-1)
+
+    for i in range(len(repr[0])):
+        i_s_e += (repr[0][i]) * (repr[0][i])
+        if(repr[1][i] >= t_s):
+            break
+
     total_cost = i_s_e +t_r+t_s+m_p
-    if math.isnan(total_cost):
+
+    if math.isnan(total_cost) or math.isnan(t_s):
         return -1
-    return 1/(1+total_cost)
+    return 100/(1+total_cost)
 
 def generateStart(population):
     sol_list = []
@@ -52,7 +58,7 @@ def generateStart(population):
         kp = logistics.customRand(2,18,2)
         ti = logistics.customRand(1.05,9.42,2)
         td = logistics.customRand(0.26,2.37,2)
-        sol_list.append([kp,ti,td])
+        sol_list.append([kp,ti,td,0]) #add the 0 value for the fitness to be used and modified
     return sol_list
 
 def russianRoulette(list,population):
@@ -60,40 +66,44 @@ def russianRoulette(list,population):
     # select the top 2 fitest scores as chromosomes 1 and 2
     # for the remaing 48 we select from the 50 in the population 
     # using the roulette strategy
+    global txt
 
     sortedByfitness = sorted(list, key=itemgetter(3))
-    surviors = []
+    logistics.writeMatrix(sortedByfitness,txt,"SORTED FITNESS: ")
+    print("size: ", len(sortedByfitness))
+    newList = [None] * population
     # add the 2 most fit chromosomes 
-    surviors.append(sortedByfitness[-1])
-    surviors.append(sortedByfitness[-2])
-
+    newList[0]=(sortedByfitness[population-1])
+    newList[1]=(sortedByfitness[population-2])
+    print(len(newList))
+    logistics.writeMatrix(newList,txt,"TWO BEST: ")
     rouletteRatio = []
     S = 0
-    for sol in  sortedByfitness:
+    verify = 0
+
+    for sol in sortedByfitness: #find sum of all fitness
         if sol[3] > 0:
             S += sol[3]
-    verify = 0
-    for i in range(len(sortedByfitness)):
-        if sortedByfitness[i][3] > 0:
+    
+    for i in range(population):
+        if sortedByfitness[i][3] > 0: # solution is feasible 
             verify += sortedByfitness[i][3]/S
             rouletteRatio.append(verify)
         else:
             rouletteRatio.append(-1)
-    
-    for i in range(population - 2):
+    logistics.writeMatrix(newList,txt,"TWO BEST After: ")
+    for i in range(2,population):
         # lets keep it significant by 5 decimal places since there are many possible ties at 
         # 4 decimal places
         # we should also not keep 1 as a possibly randomly generated number. 
         # from experimentation the sum of the ratios is arround 0.9999999999999996
         check = logistics.customRand(0,0.99999,5) 
-        for i in range(len(sortedByfitness)):
-            if rouletteRatio[i] >= check:
-                surviors.append(sortedByfitness[i])
+        for j in range(population):
+            if rouletteRatio[j] >= check:
+                newList[i] = (sortedByfitness[j])
                 break
-    
-
-    # logistics.printCleanMatrix(surviors)
-    return surviors
+    logistics.writeMatrix(["Junk"],txt,"The Found Surviors ")
+    return newList
 
 def crossOver(list,population,pc):
     #cross over chromosomes 
@@ -116,9 +126,9 @@ def crossOver(list,population,pc):
         
         crossOverPoint = int(logistics.customRand(1,2,0))
         if(crossOverPoint == 1):
-            cloneList[index_A] = [cloneList[index_A][0],cloneList[index_B][1], cloneList[index_B][2]]
+            cloneList[index_A] = [cloneList[index_A][0],cloneList[index_B][1], cloneList[index_B][2],0]
         else:
-            list[index_A] = [cloneList[index_A][0],cloneList[index_A][1], cloneList[index_B][2]]
+            list[index_A] = [cloneList[index_A][0],cloneList[index_A][1], cloneList[index_B][2],0]
     return cloneList
 
 def mutation(list,population,pm):
@@ -136,34 +146,50 @@ def mutation(list,population,pm):
     return clone
 
 
-
 def main(population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
+    global txt
     plot_points = []
     surviors = generateStart(population)
+    txt = logistics.createTxt("results.txt")
     for survior in surviors:
         fit = getFitness(survior)
-        survior.append(fit)
-
+        survior[3]= fit
+    logistics.writeMatrix( surviors,txt,"1.) Fitness :")
     russian_surviors = russianRoulette(surviors,population)
-    plot_points.append(russian_surviors[-1][3])
-    logistics.popMatrixCol(russian_surviors, 4-1)
+    logistics.writeMatrix( surviors,txt,"Roullete :")
+    plot_points.append(russian_surviors[-1][3]) #this point will come from the 
     cross_surviors = crossOver(russian_surviors,population,Pc)
-    surviors = mutation(cross_surviors,population,pm=0.25)
+    logistics.writeMatrix(surviors,txt, "Crossover :")
+    surviors = mutation(cross_surviors,population,pm = 0.25)
+    logistics.writeMatrix(surviors,txt,"mutation :", )
+    
+    # logistics.printCleanMatrix(surviors)
+   
     last = None
     for i in range(generations):
         for survior in surviors:
             fit = getFitness(survior)
-            survior.append(fit)
+            survior[3] = fit
+        logistics.writeMatrix(surviors,txt, str(i+2) + ".) Fitness :")
         if i != generations - 1:
             russian_surviors = russianRoulette(surviors,population)
+            logistics.writeMatrix( surviors,txt,"Roullete :")
+
             plot_points.append(russian_surviors[-1][3])
-            logistics.popMatrixCol(russian_surviors, 4-1)
             cross_surviors = crossOver(russian_surviors,population,Pc)
+
+            logistics.writeMatrix( surviors,txt,"Crossover :")
             surviors = mutation(cross_surviors,population,Pm)
+
+            logistics.writeMatrix( surviors,txt,"mutations :")
+            logistics.writeMatrix(surviors,txt)
+            # logistics.printCleanMatrix(surviors)
 
     #get the best solution of the last iterations found in position 0
     sortedByfitness = sorted(surviors, key=itemgetter(3))
     print("BEST solution found :", sortedByfitness[-1])
+
+    txt.close()
     return plot_points
 
 def TEST1():

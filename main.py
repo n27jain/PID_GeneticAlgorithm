@@ -6,16 +6,42 @@ import math
 import copy
 import logistics
 
-def plotByPoints(points,name):
-    x = []
-    for i in range(len(points)):
-        x.append(i)
+# def plotByPoints(points,name):
+#     x = []
+#     for i in range(len(points)):
+#         x.append(i)
+#     plt.figure()
+#     plt.title(name)
+#     plt.xlabel('generation')
+#     plt.ylabel('best fitness')
+#     plt.plot(x, points)
+#     plt.savefig(name + '.png')
+
+def plotExperiment(experiments):
+    plt.figure(figsize=(40,20))
+    # 3, 4
+    i = 0
+    for i in range(len(experiments)):
+        x = []
+        experiment = experiments[i]
+        y = experiment[0]
+        title = experiment[1]
+        for j in range(len(y)):
+            x.append(j+1)
+        plt.subplot(3, 4, i+1)
+        plt.plot(x,y)
+        plt.title(experiment[1])
+        plt.xlabel('generation')
+        plt.ylabel('best fitness')
+    plt.savefig("experiment_results_complete" + '.png')
+    # for i in range(len(points)):
+    #     x.append(i)
+    # plt.figure()
+    # plt.title(name)
+    # plt.xlabel('generation')
+    # plt.ylabel('best fitness')
+    # plt.plot(x, points)
     
-    plt.title(name)
-    plt.xlabel('generation')
-    plt.ylabel('best fitness')
-    plt.plot(x, points)
-    plt.savefig(name + '.png')
 
 def getFitness(chromo):
     kp = chromo[0]  # Random initial value between (2,18)
@@ -174,40 +200,39 @@ def main(sol = None,population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
 
 
 def RunTests():
-
+    #Question 3
     starting = generateStart(population=50)
-    #TEST1()
-    plotByPoints(main(sol = starting,population = 50, generations = 150, Pc = 0.6, Pm = 0.25),name="TEST1_BASE_CASE")
-
+    # TEST1() And Question 3
+    plotPoints = []
+    # plotByPoints(main(sol = starting,population = 50, generations = 150, Pc = 0.6, Pm = 0.25),name="TEST1_BASE_CASE")
+    plotPoints.append([main(sol = starting,population = 50, generations = 150, Pc = 0.6, Pm = 0.25),"TEST1_BASE_CASE"])
     #TEST2()
-    plotByPoints(main(sol = starting , population = 50, generations = 200, Pc = 0.8, Pm = 0.25),name="TEST2_MORE_GENERATIONS")
-
+    plotPoints.append([main(sol = starting , population = 50, generations = 200, Pc = 0.8, Pm = 0.25),"TEST2_MORE_GENERATIONS"])
+    
+    
     #TEST3()
-    plotByPoints(main(sol = starting , population = 50, generations = 50, Pc = 0.6, Pm = 0.25),name="TEST3_LESS_GENERATIONS")
-
+    plotPoints.append([main(sol = starting , population = 50, generations = 50, Pc = 0.6, Pm = 0.25),"TEST3_LESS_GENERATIONS"])
 # POPULATION SIZE
     #TEST4()
-    plotByPoints(main( population = 50, generations = 50, Pc = 0.6, Pm = 0.25),name="TEST4_POPULATION_BASE")
-
+    plotPoints.append([main( population = 50, generations = 50, Pc = 0.6, Pm = 0.25),"TEST4_POPULATION_BASE"])
     #TEST5()
-    plotByPoints(main( population = 25, generations = 50, Pc = 0.6, Pm = 0.25),name="TEST5_POPULATION_SMALL")
-
+    plotPoints.append([main( population = 25, generations = 50, Pc = 0.6, Pm = 0.25),"TEST5_POPULATION_SMALL"])
     #TEST6()
-    plotByPoints(main(population = 400, generations = 50, Pc = 0.6, Pm = 0.25),name="TEST6_POPULATION_LARGE")
-# PROBABILITIES
+    plotPoints.append([main(population = 400, generations = 50, Pc = 0.6, Pm = 0.25),"TEST6_POPULATION_LARGE"])
 
+# PROBABILITIES
     starting = generateStart(population=50)
     #TEST7()
-    plotByPoints(main(sol=starting, population = 50, generations = 150, Pc = 0.8, Pm = 0.25),name="TEST7_HIGH_PC")
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.8, Pm = 0.25),"TEST7_HIGH_PC"])
     #TEST8()
-    plotByPoints(main(sol=starting, population = 50, generations = 150, Pc = 0.4, Pm = 0.25),name="TEST8_LOW_PC")
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.4, Pm = 0.25),"TEST8_LOW_PC"])
     #TEST9()
-    plotByPoints(main(sol=starting, population = 50, generations = 150, Pc = 0.6, Pm = 0.5),name="TEST9_HIGH_PM")
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.6, Pm = 0.5),"TEST9_HIGH_PM"])
     #TEST10()
-    plotByPoints(main(sol=starting, population = 50, generations = 150, Pc = 0.6, Pm = 0.1),name="TEST10_LOW_PM")
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.6, Pm = 0.1),"TEST10_LOW_PM"])
 
+    plotExperiment(plotPoints)
 
-points = main()
-plotByPoints(points,"Sample")
+RunTests()
 
 # see()

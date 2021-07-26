@@ -6,28 +6,45 @@ import math
 import copy
 import logistics
 
-experiments = []
-experiments.append([[1,2,3,4,324,23432,2343,0], "first"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "secodn"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "t"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "for"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "fif"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "six"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "sev"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "eig"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "nin"])
-experiments.append([[1,2,3,4,324,23432,2343,0], "ten"])
-plt.figure(figsize=(40,20))
-for i in range(len(experiments)):
-    x = []
-    experiment = experiments[i]
-    y = experiment[0]
-    title = experiment[1]
-    for j in range(len(y)):
-        x.append(j+1)
-    plt.subplot(3, 4, i+1)
-    plt.plot(x,y)
-    plt.title(experiment[1])
-    plt.xlabel('generation')
-    plt.ylabel('best fitness')
-plt.savefig("experiment_results_complete" + '.png')
+
+chromo = [4.8, 5.23, 2.22]
+
+def printCleanMatrix(array):
+    for list in array:
+        print(list)
+    print("DONE \n")
+
+kp = chromo[0]  # Random initial value between (2,18)
+ti = chromo[1]  # Random initial value between (1.05, 9.42)
+td = chromo[2]  # Random initial value between (0.26, 2.37)
+
+# Compute G
+g = kp * tf([ti * td, ti, 1], [ti, 0])
+
+# Compute transfer function
+f = tf(1, [1, 6, 11, 6, 0])
+
+pid_sys = feedback(series(g, f), 1)
+t = np.linspace(0, 50, 1000)
+sysinfo = stepinfo(pid_sys)
+
+i_s_e = 0
+t_r = sysinfo['RiseTime']
+t_s = sysinfo['SettlingTime']
+m_p = sysinfo['Overshoot']
+
+# t = np.linspace(0, 0.01, 100) 
+repr = step(pid_sys,t)  # compute e(t)
+# repr2 = step(pid_sys)
+# printCleanMatrix(repr1[-1])
+
+for i in range(len(repr[0])):
+    i_s_e += (repr[0][i]) * (repr[0][i])
+
+# print(t, len(repr1[0]))
+
+print("ise ",i_s_e,  "tr ",t_r,"ts ", t_s, "mp",m_p)
+
+
+
+    

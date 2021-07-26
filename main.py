@@ -6,16 +6,6 @@ import math
 import copy
 import logistics
 
-# def plotByPoints(points,name):
-#     x = []
-#     for i in range(len(points)):
-#         x.append(i)
-#     plt.figure()
-#     plt.title(name)
-#     plt.xlabel('generation')
-#     plt.ylabel('best fitness')
-#     plt.plot(x, points)
-#     plt.savefig(name + '.png')
 
 def plotExperiment(experiments):
     plt.figure(figsize=(40,20))
@@ -33,7 +23,7 @@ def plotExperiment(experiments):
         plt.title(experiment[1])
         plt.xlabel('generation')
         plt.ylabel('best fitness')
-    plt.savefig("experiment_results_complete" + '.png')
+    plt.savefig("experiment_results_complete_2" + '.png')
     # for i in range(len(points)):
     #     x.append(i)
     # plt.figure()
@@ -55,6 +45,7 @@ def getFitness(chromo):
     f = tf(1, [1, 6, 11, 6, 0])
 
     pid_sys = feedback(series(g, f), 1)
+    t = np.linspace(0, 50, 1000)
     sysinfo = stepinfo(pid_sys)
     # t = np.linspace(0, 0.01, 100)
     repr = step(pid_sys)  # compute e(t)
@@ -64,17 +55,16 @@ def getFitness(chromo):
     t_s = sysinfo['SettlingTime']
     m_p = sysinfo['Overshoot']
 
+    if math.isnan(t_s): # infeasible solution
+        return -1
 
     for i in range(len(repr[0])):
         i_s_e += (repr[0][i]) * (repr[0][i])
-        if(repr[1][i] >= t_s):
-            break
-
     total_cost = i_s_e +t_r+t_s+m_p
 
-    if math.isnan(total_cost) or math.isnan(t_s):
+    if math.isnan(total_cost): #edge case throws error
         return -1
-    return 1000/(1+total_cost)
+    return 100/(1+total_cost)
 
 def generateStart(population):
     sol_list = []
@@ -114,7 +104,6 @@ def russianRoulette(list,population):
             if rouletteRatio[j] >= check:
                 newlist.append(copy.deepcopy((sortedByfitness[j])))
                 break
-        # print("newList: " , newlist)
 
     return newlist
 
@@ -160,7 +149,7 @@ def mutation(list,population,pm):
     return clone
 
 
-def main(sol = None,population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
+def main(sol = None,population = 50, generations = 150, Pc = 0.6, Pm = 0.25, title = "example"):
     
     plot_points = []
     best_sol = []
@@ -172,66 +161,76 @@ def main(sol = None,population = 50, generations = 150, Pc = 0.6, Pm = 0.25):
         fit = getFitness(survior)
         survior[3]= fit
    
-
+    # print("Fitness!")
     surviors = russianRoulette(surviors,population)
+    # print("russianRoulette!")
     plot_points.append(surviors[0][3]) #this point will come from the 
     best_sol.append(surviors[0])
 
     surviors = crossOver(surviors,population,Pc)
+    # print("crossOver!")
     surviors = mutation(surviors,population,Pm)
-
+    # print("mutation!")
+    # print("generations: " , generations)
     for i in range(generations):
+        # print("here")
         for survior in surviors:
             fit = getFitness(survior)
             survior[3] = fit
+        # print("Fitness!")
         if i != generations - 1:
             surviors = russianRoulette(surviors,population)
+            # print("russianRoulette!")
             plot_points.append(surviors[0][3])
             best_sol.append(surviors[0])
             surviors = crossOver(surviors,population,Pc)
+            # print("crossOver!")
             surviors = mutation(surviors, population,Pm)
+            # print("mutation!")
+        # print(i)
            
 
     #get the best solution of the last iterations found in position 0
-    sortedByfitness = sorted(surviors, key=itemgetter(3))
-    print("BEST solutions found :")
-    logistics.printCleanMatrix(best_sol)
+    print(title + " BEST solution found :", surviors[0])
     return plot_points
 
 
 def RunTests():
+    print("Starting Tests: ")
     #Question 3
     starting = generateStart(population=50)
     # TEST1() And Question 3
     plotPoints = []
     # plotByPoints(main(sol = starting,population = 50, generations = 150, Pc = 0.6, Pm = 0.25),name="TEST1_BASE_CASE")
-    plotPoints.append([main(sol = starting,population = 50, generations = 150, Pc = 0.6, Pm = 0.25),"TEST1_BASE_CASE"])
+    plotPoints.append([main(sol = starting,population = 50, generations = 150, Pc = 0.6, Pm = 0.25, title="TEST_1"),"TEST1_BASE_CASE"])
     #TEST2()
-    plotPoints.append([main(sol = starting , population = 50, generations = 200, Pc = 0.8, Pm = 0.25),"TEST2_MORE_GENERATIONS"])
+    plotPoints.append([main(sol = starting , population = 50, generations = 200, Pc = 0.8, Pm = 0.25, title="TEST_2"),"TEST2_MORE_GENERATIONS"])
     
     
     #TEST3()
-    plotPoints.append([main(sol = starting , population = 50, generations = 50, Pc = 0.6, Pm = 0.25),"TEST3_LESS_GENERATIONS"])
+    plotPoints.append([main(sol = starting , population = 50, generations = 50, Pc = 0.6, Pm = 0.25, title="TEST_3"),"TEST3_LESS_GENERATIONS"])
 # POPULATION SIZE
     #TEST4()
-    plotPoints.append([main( population = 50, generations = 50, Pc = 0.6, Pm = 0.25),"TEST4_POPULATION_BASE"])
+    plotPoints.append([main( population = 50, generations = 50, Pc = 0.6, Pm = 0.25, title="TEST_4"),"TEST4_POPULATION_BASE"])
     #TEST5()
-    plotPoints.append([main( population = 25, generations = 50, Pc = 0.6, Pm = 0.25),"TEST5_POPULATION_SMALL"])
+    plotPoints.append([main( population = 25, generations = 50, Pc = 0.6, Pm = 0.25, title="TEST_5"),"TEST5_POPULATION_SMALL"])
     #TEST6()
-    plotPoints.append([main(population = 400, generations = 50, Pc = 0.6, Pm = 0.25),"TEST6_POPULATION_LARGE"])
+    plotPoints.append([main(population = 400, generations = 50, Pc = 0.6, Pm = 0.25, title="TEST_6"),"TEST6_POPULATION_LARGE"])
 
 # PROBABILITIES
     starting = generateStart(population=50)
     #TEST7()
-    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.8, Pm = 0.25),"TEST7_HIGH_PC"])
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.8, Pm = 0.25, title="TEST_7"),"TEST7_HIGH_PC"])
     #TEST8()
-    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.4, Pm = 0.25),"TEST8_LOW_PC"])
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.4, Pm = 0.25, title="TEST_8"),"TEST8_LOW_PC"])
     #TEST9()
-    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.6, Pm = 0.5),"TEST9_HIGH_PM"])
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.6, Pm = 0.5, title="TEST_9"),"TEST9_HIGH_PM"])
     #TEST10()
-    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.6, Pm = 0.1),"TEST10_LOW_PM"])
+    plotPoints.append([main(sol=starting, population = 50, generations = 80, Pc = 0.6, Pm = 0.1, title="TEST_10"),"TEST10_LOW_PM"])
 
     plotExperiment(plotPoints)
+
+    print("Tests Complete")
 
 RunTests()
 

@@ -4,4 +4,4 @@ This program simulates a genetic algorithm problem solving for a pid system. The
 
 
 Here are the results:
-
+![results](https://github.com/n27jain/PID_GeneticAlgorithm/blob/main/experiment_results_complete_2.png)
